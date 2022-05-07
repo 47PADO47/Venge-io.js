@@ -20,11 +20,11 @@ Therefore, I suggest logging in via hash.
 ```javascript
     const { Venge } = require('venge-io.js');
 
-    const venge = new Venge('USERNAME', 'PASSWORD', 'GRECHAPTA_TOKEN');
+    const venge = new Venge('USERNAME', 'PASSWORD', 'GRECAPTCHA_TOKEN');
     // Constructor variables are optional.
 
     (async () => {
-        await venge.login('USERNAME', 'PASSWORD', 'GRECHAPTA_TOKEN');
+        await venge.login('USERNAME', 'PASSWORD', 'GRECAPTCHA_TOKEN');
         // Variables are optional if already specified in constructor.
 
         // or you can login via hash
