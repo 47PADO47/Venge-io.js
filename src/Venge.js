@@ -30,19 +30,19 @@ module.exports = class Venge {
 
         const json = await res.json()
         .catch(() => this.#log("Venge API returned a non-JSON response"));
-        if (!json.success) return this.#log("Venge API returned an error: " + json.message);
+        if (!json?.success) return this.#log("Venge API returned an error: " + json?.message ?? "Unknown error");
 
         return json ?? {};
     };
 
     async login(username = this.username, password = this.password, grecaptchaToken = this.grecaptchaToken) {
-        if (!this.csrToken()) return this.#log("CSR token is not available");
+        if (!await this.csrToken()) return this.#log("CSR token is not available");
         if (!username || !password || !grecaptchaToken) return this.#log("Username, password and grecaptchaToken are required");
 
         const params = new URLSearchParams({username, password, token: grecaptchaToken}).toString();
         const res = await this.#fetch(`login_v2`, {body: params});
 
-        await this.#setAuthorized(res?.success ?? false);
+        this.#setAuthorized(res?.success ?? false);
 
         if (!this.authorized) return this.#log("Login failed ❌");
         
@@ -98,7 +98,7 @@ module.exports = class Venge {
         return res?.result ?? [];
     };
 
-    async getClans() {
+    async getClansLeaderboard() {
         const res = await this.#fetch("leaderboard&sort=clans");
         return res?.result ?? [];
     };
@@ -142,7 +142,6 @@ module.exports = class Venge {
 
     async buyItem(id) {
         if (!id) return this.#log("ID field is required");
-        if (!this.authorized) return this.#log("You are not logged-in");
 
         const params = new URLSearchParams({id}).toString();
         const res = await this.#fetch(`buy_item`, {body: params}, true);
@@ -151,7 +150,6 @@ module.exports = class Venge {
     
     async sellItem(id) {
         if (!id) return this.#log("ID field is required");
-        if (!this.authorized) return this.#log("You are not logged-in");
 
         const params = new URLSearchParams({id}).toString();
         const res = await this.#fetch(`sell_item`, {body: params}, true);
@@ -160,7 +158,6 @@ module.exports = class Venge {
 
     async resellItem(id) {
         if (!id) return this.#log("ID field is required");
-        if (!this.authorized) return this.#log("You are not logged-in");
 
         const params = new URLSearchParams({id}).toString();
         const res = await this.#fetch(`resell_item`, {body: params}, true);
@@ -183,25 +180,21 @@ module.exports = class Venge {
     async getInventory(version = 2) {
         const opts = [1,2];
         if (!opts.includes(version)) return this.#log(`Version must be one of the following: ${opts.join(", ")}`);
-        if (!this.authorized) return this.#log("You are not logged-in");
         const res = await this.#fetch(`get_inventory${version === 1 ? "" : `_v${version}`}`, null, true);
         return res;
     };
 
     async getMySales() {
-        if (!this.authorized) return this.#log("You are not logged-in");
         const res = await this.#fetch(`get_my_sales`, null, true);
         return res;
     };
 
     async getMyTrades() {
-        if (!this.authorized) return this.#log("You are not logged-in");
         const res = await this.#fetch(`get_trades`, null, true);
         return res;
     };
 
     async transferVG(username, ammount, message = "Enjoy your new coins - sent via api") {
-        if (!this.authorized) return this.#log("You are not logged-in");
         if (!username || !ammount) return this.#log("Username and ammount are required");
 
         const params = new URLSearchParams({username, ammount, message}).toString();
@@ -210,13 +203,11 @@ module.exports = class Venge {
     };
 
     async getMyListings() {
-        if (!this.authorized) return this.#log("You are not logged-in");
         const res = await this.#fetch(`get_my_listing`, null, true);
         return res?.result ?? [];
     };
 
     async cancelListing(id) {
-        if (!this.authorized) return this.#log("You are not logged-in");
         if (!id) return this.#log("ID field is required");
 
         const params = new URLSearchParams({id}).toString();
@@ -226,7 +217,6 @@ module.exports = class Venge {
 
     async reportUser(username) {
         if (!username) return this.#log("Username field is required");
-        if (!this.authorized) return this.#log("You are not logged-in");
 
         const params = new URLSearchParams({username}).toString();
         const res = await this.#fetch(`report_user`, {body: params}, true);
@@ -235,7 +225,6 @@ module.exports = class Venge {
 
     async followUser (username) {
         if (!username) return this.#log("Username field is required");
-        if (!this.authorized) return this.#log("You are not logged-in");
 
         const params = new URLSearchParams({username}).toString();
         const res = await this.#fetch(`add_friend`, {body: params}, true);
@@ -249,31 +238,26 @@ module.exports = class Venge {
     };
 
     async getMyEmoji() {
-        if (!this.authorized) return this.#log("You are not logged-in");
         const res = await this.#fetch(`get_emoji`, null, true);
         return res?.Emoji ?? {};
     };
 
     async getMyAccount() {
-        if (!this.authorized) return this.#log("You are not logged-in");
         const res = await this.#fetch(`get_account`, null, true);
         return res ?? {};
     };
 
     async getMyFollowers() {
-        if (!this.authorized) return this.#log("You are not logged-in");
         const res = await this.#fetch(`get_followers`, null, true);
         return res?.result ?? [];
     };
 
     async getMyFollowings() {
-        if (!this.authorized) return this.#log("You are not logged-in");
         const res = await this.#fetch(`get_followings`, null, true);
         return res?.result ?? [];
     };
 
     async getMyClan() {
-        if (!this.authorized) return this.#log("You are not logged-in");
         const res = await this.#fetch(`get_clan_details`, null, true);
         return res?.result ?? {};
     };
@@ -285,7 +269,6 @@ module.exports = class Venge {
 
     async setEmail(email) {
         if (!email) return this.#log("Email field is required");
-        if (!this.authorized) return this.#log("You are not logged-in");
         
         const res = await this.#fetch(`save_account`, null, true, {body: `password=&email=${email}&kill_message=&twitch=`});
         return res?.message ?? "";
@@ -293,7 +276,6 @@ module.exports = class Venge {
 
     async setPassword(password) {
         if (!password) return this.#log("Password field is required");
-        if (!this.authorized) return this.#log("You are not logged-in");
 
         const res = await this.#fetch(`save_account`, null, true, {body: `password=${password}&email=&kill_message=&twitch=`});
         return res?.message ?? "";
@@ -301,7 +283,6 @@ module.exports = class Venge {
 
     async setKillMessage(kill_message) {
         if (!kill_message) return this.#log("Kill message field is required");
-        if (!this.authorized) return this.#log("You are not logged-in");
 
         const res = await this.#fetch(`save_account`, null, true, {body: `password=&email=&kill_message=${kill_message}&twitch=`});
         return res?.message ?? "";
@@ -309,15 +290,16 @@ module.exports = class Venge {
 
     async setTwitch(twitch) {
         if (!twitch) return this.#log("Twitch field is required");
-        if (!this.authorized) return this.#log("You are not logged-in");
 
         const res = await this.#fetch(`save_account`, null, true, {body: `password=&email=&kill_message=&twitch=${twitch}`});
         return res?.message ?? "";
     };
 
-    async getAnalytics() {
-        if (!this.authorized) return this.#log("You are not logged-in");
-        const res = await this.#fetch(`get_analytics`, null, true);
+    async getAnalytics(version = 2) {
+        const opts = [1,2];
+        if (!opts.includes(version)) return this.#log(`Version must be one of the following: ${opts.join(", ")}`);
+
+        const res = await this.#fetch(`get_analytics${version == 1 ? '': `_v${version}`}`, null, true);
         return res ?? {};
     };
 
@@ -379,7 +361,7 @@ module.exports = class Venge {
 
     async getCoinDetails() {
         const res = await this.#fetch("get_coin_details", null, true);
-        return res?.result ?? {};
+        return res ?? {};
     };
 
     async getClaimCampaign() {
@@ -480,6 +462,7 @@ module.exports = class Venge {
     async buyOffer(id) {
         if (!id) return this.#log("ID field is required");
         const res = await this.#fetch("buy_offer", {body: `offer_id=${id}`}, true);
+        return res ?? {};
     };
 
     async redeemReward() {
@@ -495,6 +478,7 @@ module.exports = class Venge {
     async buyLootbox(id) {
         if (!id) return this.#log("ID field is required");
         const res = await this.#fetch("buy_lootbox", {body: `offer_id=${id}`}, true);
+        return res ?? {};
     };
 
     async claimQuestReward(index) {
@@ -517,6 +501,7 @@ module.exports = class Venge {
             body: new URLSearchParams(opts).toString()
         },
         true);
+        return res ?? {};
     };
 
     async joinClan(clan_id) {
@@ -630,6 +615,7 @@ module.exports = class Venge {
     };
 
     cleanName(name) {
+        if (!data) return "";
         return name.replace(/\[color="(.*?)"\]/g, '')
         .replace(/\[\/color]/g, '')
         .replace(/\[rainbow\](.*?)\[\/rainbow] /g, '')
@@ -637,12 +623,14 @@ module.exports = class Venge {
     };
 
     formatMarkup(data) {
+        if (!data) return "";
         return data.replace(/\[color="(.*?)"\]/g, '<span style="color:$1">')
         .replace(/\[\/color]/g, '</span>')
         .replace(/\\/g, '');
     };
 
     formatNumber (num) {
+        if (!data) return "";
         return num.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
     };
 
@@ -679,7 +667,7 @@ module.exports = class Venge {
         .catch(() => this.#log("Venge API returned a non-JSON response"));
         
         if (json == "[]") return this.#log("Venge API returned an empty response (err. 404 or no data)");
-        if (!json.success) return this.#log("Venge API returned an error: " + json?.message ?? "Unknown error");
+        if (!json?.success) return this.#log("Venge API returned an error: " + json?.message ?? "Unknown error");
 
         return json;
     };
