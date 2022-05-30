@@ -614,6 +614,18 @@ module.exports = class Venge {
         return res ?? {};
     };
 
+    async getWeeklyOffer() {
+        const res = await this.#fetch("get_weekly_offer", null, true);
+        return res ?? {};
+    };
+
+    async unlockCrate(id) {
+        if (!id) return this.#log("ID field is required");
+
+        const res = await this.#fetch("unlock_crate", {body: `item_id=${id}`}, true);
+        return res ?? {};
+    };
+
     cleanName(name) {
         if (!data) return "";
         return name.replace(/\[color="(.*?)"\]/g, '')
